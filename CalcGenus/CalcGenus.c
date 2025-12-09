@@ -102,6 +102,7 @@ cycle_index_t* cbv_get_cycle_indices(cbv_t cycles_by_vertex,
                                      cycle_index_t* num_cycles);
 
 void show_progress(double fraction);
+static void configure_progress_heartbeat(void);
 void show_solution(cycle_index_t genus_lower_bound,
                    cycle_index_t genus_lower_bound_implied_fit,
                    uint64_t num_search_calls, cycle_index_t num_cycles,
@@ -144,6 +145,7 @@ int main(void) {
   adj_filename = getenv("ADJ");
   output_to_stdout = getenv("STDOUT") != NULL;
   progress_bar_newline = getenv("PBN") != NULL;
+  configure_progress_heartbeat();
 
   if (PRINT_PROGRESS) {
     fprintf(stderr, "Loading adjacency list...\n");
@@ -575,7 +577,18 @@ void show_solution(cycle_index_t genus_lower_bound,
 
 static int prev_percent = -1;
 static time_t last_progress_time = 0;
-static const time_t progress_heartbeat_seconds = 30;
+static time_t progress_heartbeat_seconds = 30;
+
+static void configure_progress_heartbeat(void) {
+  const char* heartbeat_env = getenv("HEARTBEAT_SECONDS");
+  if (heartbeat_env != NULL) {
+    char* endptr = NULL;
+    long heartbeat_value = strtol(heartbeat_env, &endptr, 10);
+    if (endptr != heartbeat_env && heartbeat_value > 0) {
+      progress_heartbeat_seconds = (time_t)heartbeat_value;
+    }
+  }
+}
 void show_progress(double fraction) {
   // E.g. [##########          ] 50%
 
