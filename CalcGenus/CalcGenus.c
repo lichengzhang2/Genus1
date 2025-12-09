@@ -626,6 +626,7 @@ void show_progress(double fraction) {
   fflush(stderr);
   prev_percent = percent;
   last_progress_time = now;
+  prev_percent = (int)(fraction * 100);
 }
 
 bool is_valid_rotation_system(bool* used_cycles, cycles_t cycles,
