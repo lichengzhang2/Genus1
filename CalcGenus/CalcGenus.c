@@ -597,6 +597,9 @@ void show_progress(double fraction) {
   if (PROGRESS_BAR_NEWLINE) {
     fprintf(stderr, "\n");
   }
+  // Explicitly flush so progress updates show up immediately even when stderr
+  // is block buffered (e.g., in WSL pipelines).
+  fflush(stderr);
   prev_percent = (int)(fraction * 100);
 }
 
