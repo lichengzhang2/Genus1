@@ -9,6 +9,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <time.h>
 
 // configuration options:
 #define PRINT_PROGRESS true  // whether to print progress messages
@@ -573,10 +574,20 @@ void show_solution(cycle_index_t genus_lower_bound,
 }
 
 static int prev_percent = -1;
+static time_t last_progress_time = 0;
+static const time_t progress_heartbeat_seconds = 30;
 void show_progress(double fraction) {
   // E.g. [##########          ] 50%
 
-  if (!PRINT_PROGRESS || ((int)(fraction * 100) == prev_percent)) {
+  if (!PRINT_PROGRESS) {
+    return;
+  }
+
+  time_t now = time(NULL);
+  int percent = (int)(fraction * 100);
+  if (percent == prev_percent &&
+      (last_progress_time != 0 &&
+       now - last_progress_time < progress_heartbeat_seconds)) {
     return;
   }
 
@@ -593,11 +604,15 @@ void show_progress(double fraction) {
       fprintf(stderr, " ");
     }
   }
-  fprintf(stderr, "] %d%%", (int)(fraction * 100));
+  fprintf(stderr, "] %d%%", percent);
   if (PROGRESS_BAR_NEWLINE) {
     fprintf(stderr, "\n");
   }
-  prev_percent = (int)(fraction * 100);
+  // Explicitly flush so progress updates show up immediately even when stderr
+  // is block buffered (e.g., in WSL pipelines).
+  fflush(stderr);
+  prev_percent = percent;
+  last_progress_time = now;
 }
 
 bool is_valid_rotation_system(bool* used_cycles, cycles_t cycles,
